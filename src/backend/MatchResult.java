@@ -11,5 +11,5 @@ package backend;
  * @author LukeMcNemee
  */
 public enum MatchResult {
-    REGULAR_TIME, OVER_TIME, PENALTIES;
+    REGULAR_TIME, OVER_TIME, PENALTIES, CONTUMATED;
 }

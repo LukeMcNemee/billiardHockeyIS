@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package backend;
 
 import java.util.Objects;
@@ -14,6 +13,7 @@ import java.util.Set;
  * @author LukeMcNemee
  */
 public class Team {
+
     private Long id;
     private String name;
     private String coach;
@@ -82,19 +82,62 @@ public class Team {
         this.playedMatches = playedMatches;
     }
     
-    public void addPlayer(Player player){
-        players.add(player);
+    public int getNumMatchesPlayed(){
+        //TODO
+        return 0;
     }
     
-    public void playMatch(Match match){
+    public Score getPlayedMatchesScore(){
+        //TODO
+        return null;
+    }
+
+    public void addPlayer(Player player) {
+        players.add(player);
+    }
+
+    public void playMatch(Match match) {
         playedMatches.add(match);
+    }
+
+    public double getCoefitient() {
+        //TODO
+        return 0;
+    }
+
+    public double getPenaltyCoefitient() {
+        //TODO
+        return 0;
+    }
+
+    public Score getScore() {
+        //TODO
+        return null;
+    }
+
+    public Score getOwnGoalsScore() {
+        //TODO
+        return null;
+    }
+
+    public Score getTechnicalGoalsScore() {
+        //TODO
+        return null;
+    }
+
+    public Score agetAdvantageGoalsScore() {
+        //TODO
+        return null;
+    }
+
+    public Score getContumationGoalsScore() {
+        //TODO
+        return null;
     }
 
     @Override
     public String toString() {
         return "Team{" + "id=" + id + ", name=" + name + ", coach=" + coach + ", players=" + players + ", playedMatches=" + playedMatches + '}';
     }
-    
-    
-    
+
 }

@@ -8,6 +8,7 @@ package backend;
 
 import java.sql.Date;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  *
@@ -22,13 +23,39 @@ public class Match {
     private Map<Player, Integer> goalsScored;
     private Map<Player, Integer> successfulPenalty;
     private Map<Player, Integer> unsuccessfulPenalty;
-
+    private Score ownGoals;
+    private Score technicalGoals;
+    private Score advantageGoals;
+    private Score contumationGoals;
+    
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 13 * hash + Objects.hashCode(this.datePlayed);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Match other = (Match) obj;
+        if (!Objects.equals(this.id, other.id)) {
+            return false;
+        }
+        return true;
     }
 
     public Team getHomeTeam() {
@@ -64,16 +91,11 @@ public class Match {
         return null;
     }
     
-    public int awayScore(){
+    public Score getScore(){
         //TODO
-        return 0;
+        return null;
     }
     
-    public int homeScore(){
-        //TODO;
-        return 0;
-    }
-
     public void setResult(MatchResult result) {
         this.result = result;
     }
@@ -125,4 +147,10 @@ public class Match {
     public void setUnsuccessfulPenalty(Map<Player, Integer> unsuccessfulPenalty) {
         this.unsuccessfulPenalty = unsuccessfulPenalty;
     }
+
+    @Override
+    public String toString() {
+        return "Match{" + "id=" + id + ", homeTeam=" + homeTeam + ", awayTeam=" + awayTeam + ", datePlayed=" + datePlayed + ", result=" + result + '}';
+    }
+    
 }

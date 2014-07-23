@@ -11,5 +11,5 @@ package backend;
  * @author LukeMcNemee
  */
 public enum PlayerPosition {
-    GOALTENDER, DEFENCEMAN, FORWARD;
+    GOALTENDER, DEFENCEMAN, FORWARD, ALTERNATE;
 }

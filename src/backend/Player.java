@@ -6,6 +6,8 @@
 
 package backend;
 
+import java.util.Objects;
+
 /**
  *
  * @author LukeMcNemee
@@ -30,6 +32,35 @@ public class Player {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 89 * hash + Objects.hashCode(this.name);
+        hash = 89 * hash + Objects.hashCode(this.surname);
+        hash = 89 * hash + this.playerNumber;
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final Player other = (Player) obj;
+        if (!Objects.equals(this.id, other.id)) {
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "Player{" + "id=" + id + ", name=" + name + ", surname=" + surname + ", playerNumber=" + playerNumber + ", team=" + team + ", playerPosition=" + playerPosition + '}';
     }
 
     public void setName(String name) {
