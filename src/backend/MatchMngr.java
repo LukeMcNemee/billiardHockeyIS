@@ -6,10 +6,25 @@
 
 package backend;
 
+import java.util.List;
+
 /**
  *
  * @author LukeMcNemee
  */
 public interface MatchMngr {
+    
+    public Match createMatch(Match match);
+    
+    public Match updateMatch(Match match);
+    
+    public Match deleteMatch(Match match);
+    
+    public Match findMatchById(Long id);
+    
+    public List<Match> findMatchesByTeam(Team team);
+    
+    public List<Match> findMatchesByTeams(Team team1, Team team2);
+    
     
 }

@@ -6,10 +6,21 @@
 
 package backend;
 
+import java.util.List;
+
 /**
  *
  * @author LukeMcNemee
  */
 public interface TeamMngr {
     
+    public Team createTeam(Team team);
+    
+    public Team deteleTeam(Team team);
+    
+    public Team updateTeam(Team team);
+    
+    public Team findTeamByID(Long id);
+    
+    public List<Team> findAllTeams();
 }
