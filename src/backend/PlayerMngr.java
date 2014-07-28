@@ -22,11 +22,11 @@ public interface PlayerMngr {
     
     public List<Player> getPlayersByTeamAway(Team team);
     
-    public Player createPlayer(Player player);
+    public void createPlayer(Player player);
     
-    public Player updatePlayer(Player player);
+    public void updatePlayer(Player player);
     
-    public Player detetePlayer(Player player);
+    public void detetePlayer(Player player);
     
     public List<Player> filterPlayersByPosition(List<Player> players, PlayerPosition position);
 }
