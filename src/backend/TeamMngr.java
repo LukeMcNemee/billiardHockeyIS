@@ -14,11 +14,11 @@ import java.util.List;
  */
 public interface TeamMngr {
     
-    public Team createTeam(Team team);
+    public void createTeam(Team team);
     
-    public Team deteleTeam(Team team);
+    public void deteleTeam(Team team);
     
-    public Team updateTeam(Team team);
+    public void updateTeam(Team team);
     
     public Team findTeamByID(Long id);
     

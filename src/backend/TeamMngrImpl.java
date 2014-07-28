@@ -3,40 +3,183 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package backend;
 
+import common.ServiceFailureException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.sql.DataSource;
 
 /**
  *
  * @author LukeMcNemee
  */
-public class TeamMngrImpl implements TeamMngr{
+public class TeamMngrImpl implements TeamMngr {
+
+    public static final Logger logger = Logger.getLogger(TeamMngrImpl.class.getName());
+    private DataSource dataSource;
 
     @Override
-    public Team createTeam(Team team) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void createTeam(Team team) {
+        checkDataSource();
+        validate(team);
+
+        if (team.getId() != null) {
+            throw new IllegalArgumentException("Team aleready exists" + team.toString());
+        }
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("INSERT INTO TEAMS (name, coach) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS)) {
+            st.setString(1, team.getName());
+            st.setString(2, team.getCoach());
+
+            int addedRows = st.executeUpdate();
+
+            if (addedRows != 1) {
+                throw new ServiceFailureException("Internal Error: More rows inserted when trying to insert team " + team.toString());
+            }
+
+            ResultSet key = st.getGeneratedKeys();
+            Long id = key.getLong(1);
+
+            if (key.next()) {
+                throw new IllegalArgumentException("Given ResultSet contains more rows");
+            }
+            team.setId(id);
+
+        } catch (SQLException ex) {
+            String msg = "error when inserting team" + team.toString();
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
     }
 
     @Override
-    public Team deteleTeam(Team team) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void deteleTeam(Team team) {
+        checkDataSource();
+        validate(team);
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("DELETE FROM TEAMS WHERE id = ?")) {
+            st.setLong(1, team.getId());
+
+            int deletedRows = st.executeUpdate();
+
+            if (deletedRows != 1) {
+                throw new ServiceFailureException("Internal Error: More rows deleted when trying to delete team " + team.toString());
+            }
+
+        } catch (SQLException ex) {
+            String msg = "error when deleting team" + team.toString();
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
     }
 
     @Override
-    public Team updateTeam(Team team) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    public void updateTeam(Team team) {
+        checkDataSource();
+        validate(team);
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("UPDATE TEAMS SET name = ?, coach = ? WHERE id = ?")) {
+            st.setString(1, team.getName());
+            st.setString(2, team.getCoach());
+            st.setLong(3, team.getId());
+            
+            int updatedRows = st.executeUpdate();
+            if (updatedRows != 1) {
+                throw new ServiceFailureException("Internal Error: failed when trying to update team" + team.toString());
+            }            
+            
+        } catch (SQLException ex) {
+            String msg = "error when updating team" + team.toString();
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
     }
 
     @Override
     public Team findTeamByID(Long id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        checkDataSource();
+        if(id == null){
+            throw new IllegalArgumentException("id is null");
+        }
+         try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("SELECT id,name,coach FROM TEAMS WHERE id = ?")) {
+            st.setLong(1, id);
+            
+            ResultSet rs = st.executeQuery();
+            
+            if (rs.next()) {
+                Team team = resultSetToTeam(rs);
+
+                if (rs.next()) {
+                    throw new ServiceFailureException("Internal error: More entities with the same id found "
+                            + "(source id: " + id + ", found " + team + " and " + resultSetToTeam(rs));
+                }
+                return team;
+            } else {
+                return null;
+            }      
+            
+        } catch (SQLException ex) {
+            String msg = "error when selecting team with id" + id;
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
+        
     }
 
     @Override
     public List<Team> findAllTeams() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        checkDataSource();
+       
+         try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("SELECT id,name,coach FROM TEAMS")) {
+                        
+            ResultSet rs = st.executeQuery();
+            
+            List<Team> teams = resultSetToTeamList(rs);            
+            return teams;           
+            
+        } catch (SQLException ex) {
+            String msg = "error when selecting all teams";
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
+    }
+
+    private void checkDataSource() {
+        if (dataSource == null) {
+            throw new IllegalStateException("DataSource is not set");
+        }
+    }
+
+    private void validate(Team team) {
+
     }
     
+    private Team resultSetToTeam(ResultSet rs) throws SQLException{
+        Team team = new Team();
+        team.setId(rs.getLong("id"));
+        team.setName(rs.getString("name"));
+        team.setCoach(rs.getString("coach"));
+        return team;
+    }
+    
+    private List<Team> resultSetToTeamList(ResultSet rs) throws SQLException{
+        List<Team> result = new ArrayList<>();
+        while (rs.next()) {
+            Team team = resultSetToTeam(rs);
+            result.add(team);
+        }        
+        return result;
+    }
 }
