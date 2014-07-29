@@ -146,8 +146,7 @@ public class TeamMngrImpl implements TeamMngr {
                         
             ResultSet rs = st.executeQuery();
             
-            List<Team> teams = resultSetToTeamList(rs);            
-            return teams;           
+            return resultSetToTeamList(rs);
             
         } catch (SQLException ex) {
             String msg = "error when selecting all teams";

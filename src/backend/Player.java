@@ -17,7 +17,7 @@ public class Player {
     private String name;
     private String surname;
     private byte playerNumber;
-    private Team team;
+    private Long teamID;
     private boolean home;
     private boolean away;
     private PlayerPosition playerPosition;
@@ -60,7 +60,7 @@ public class Player {
 
     @Override
     public String toString() {
-        return "Player{" + "id=" + id + ", name=" + name + ", surname=" + surname + ", playerNumber=" + playerNumber + ", team=" + team + ", playerPosition=" + playerPosition + '}';
+        return "Player{" + "id=" + id + ", name=" + name + ", surname=" + surname + ", playerNumber=" + playerNumber + ", team=" + teamID + ", playerPosition=" + playerPosition + '}';
     }
 
     public void setName(String name) {
@@ -86,12 +86,12 @@ public class Player {
         this.playerNumber = playerNumber;
     }
 
-    public Team getTeam() {
-        return team;
+    public Long getTeamID() {
+        return teamID;
     }
 
-    public void setTeam(Team team) {
-        this.team = team;
+    public void setTeamID(Long teamID) {
+        this.teamID = teamID;
     }
 
     public int getHattricks(){
