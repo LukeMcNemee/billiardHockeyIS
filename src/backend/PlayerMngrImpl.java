@@ -6,6 +6,7 @@
 package backend;
 
 import common.ServiceFailureException;
+import common.ValidationException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -222,8 +223,28 @@ checkDataSource();
         }
     }
 
-    private void validate(Player player) {
-
+    static private void validate(Player player) {
+        if(player == null){
+            throw new IllegalArgumentException("player is null");
+        }
+        if(player.getName() == null || player.getName().isEmpty()){
+            throw new ValidationException("no name");
+        }
+        if(player.getSurname() == null || player.getSurname().isEmpty()){
+            throw new ValidationException("no surname");
+        }
+        if(player.getPlayerNumber() < 1 || player.getPlayerNumber() > 99){
+            throw new ValidationException("wrong number");
+        }
+        if(player.getTeamID() == null){
+            throw new ValidationException("no team");
+        }
+        if(!(player.isHome()) || !(player.isAway())){
+            throw new ValidationException("home/away not set");
+        }
+        if(player.getPlayerPosition() == null){
+            throw new ValidationException("no position");
+        }
     }
 
     private Player resultSetToPlayer(ResultSet rs) throws SQLException {

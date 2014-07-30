@@ -6,6 +6,7 @@
 package backend;
 
 import common.ServiceFailureException;
+import common.ValidationException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -161,8 +162,19 @@ public class TeamMngrImpl implements TeamMngr {
         }
     }
 
-    private void validate(Team team) {
-
+    static private void validate(Team team) {
+        if(team == null){
+            throw new IllegalArgumentException("team is null");            
+        }
+        if(team.getName() == null || team.getName().isEmpty()){
+            throw new ValidationException("no name");
+        }
+        if(team.getCoach()== null || team.getCoach().isEmpty()){
+            throw new ValidationException("no coach");
+        }
+        if(team.getPlayers() == null || team.getPlayers().isEmpty()){
+            throw new ValidationException("no players");
+        }
     }
     
     private Team resultSetToTeam(ResultSet rs) throws SQLException{
