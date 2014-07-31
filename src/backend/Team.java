@@ -19,9 +19,19 @@ public class Team {
     private String coach;
     private Set<Player> players;
     private Set<Match> playedMatches;
-
+    private TeamStatus status;
+    
+    
     public Long getId() {
         return id;
+    }
+
+    public TeamStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(TeamStatus status) {
+        this.status = status;
     }
 
     public void setId(Long id) {

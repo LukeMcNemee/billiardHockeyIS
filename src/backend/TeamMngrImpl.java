@@ -36,9 +36,10 @@ public class TeamMngrImpl implements TeamMngr {
             throw new IllegalArgumentException("Team aleready exists" + team.toString());
         }
         try (Connection conn = dataSource.getConnection();
-                PreparedStatement st = conn.prepareStatement("INSERT INTO TEAMS (name, coach) VALUES (?,?)", Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement st = conn.prepareStatement("INSERT INTO TEAMS (name, coach, status) VALUES (?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
             st.setString(1, team.getName());
             st.setString(2, team.getCoach());
+            st.setString(3, team.getStatus().toString());
 
             int addedRows = st.executeUpdate();
 
@@ -89,16 +90,17 @@ public class TeamMngrImpl implements TeamMngr {
         validate(team);
 
         try (Connection conn = dataSource.getConnection();
-                PreparedStatement st = conn.prepareStatement("UPDATE TEAMS SET name = ?, coach = ? WHERE id = ?")) {
+                PreparedStatement st = conn.prepareStatement("UPDATE TEAMS SET name = ?, coach = ?, status = ? WHERE id = ?")) {
             st.setString(1, team.getName());
             st.setString(2, team.getCoach());
-            st.setLong(3, team.getId());
-            
+            st.setString(3, team.getStatus().toString());
+            st.setLong(4, team.getId());
+
             int updatedRows = st.executeUpdate();
             if (updatedRows != 1) {
                 throw new ServiceFailureException("Internal Error: failed when trying to update team" + team.toString());
-            }            
-            
+            }
+
         } catch (SQLException ex) {
             String msg = "error when updating team" + team.toString();
             Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
@@ -109,15 +111,15 @@ public class TeamMngrImpl implements TeamMngr {
     @Override
     public Team findTeamByID(Long id) {
         checkDataSource();
-        if(id == null){
+        if (id == null) {
             throw new IllegalArgumentException("id is null");
         }
-         try (Connection conn = dataSource.getConnection();
-                PreparedStatement st = conn.prepareStatement("SELECT id,name,coach FROM TEAMS WHERE id = ?")) {
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("SELECT id,name,coach,status FROM TEAMS WHERE id = ?")) {
             st.setLong(1, id);
-            
+
             ResultSet rs = st.executeQuery();
-            
+
             if (rs.next()) {
                 Team team = resultSetToTeam(rs);
 
@@ -128,27 +130,27 @@ public class TeamMngrImpl implements TeamMngr {
                 return team;
             } else {
                 return null;
-            }      
-            
+            }
+
         } catch (SQLException ex) {
             String msg = "error when selecting team with id" + id;
             Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
             throw new ServiceFailureException(msg);
         }
-        
+
     }
 
     @Override
     public List<Team> findAllTeams() {
         checkDataSource();
-       
-         try (Connection conn = dataSource.getConnection();
-                PreparedStatement st = conn.prepareStatement("SELECT id,name,coach FROM TEAMS")) {
-                        
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("SELECT id,name,coach,status FROM TEAMS")) {
+
             ResultSet rs = st.executeQuery();
-            
+
             return resultSetToTeamList(rs);
-            
+
         } catch (SQLException ex) {
             String msg = "error when selecting all teams";
             Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
@@ -163,34 +165,70 @@ public class TeamMngrImpl implements TeamMngr {
     }
 
     static private void validate(Team team) {
-        if(team == null){
-            throw new IllegalArgumentException("team is null");            
+        if (team == null) {
+            throw new IllegalArgumentException("team is null");
         }
-        if(team.getName() == null || team.getName().isEmpty()){
+        if (team.getName() == null || team.getName().isEmpty()) {
             throw new ValidationException("no name");
         }
-        if(team.getCoach()== null || team.getCoach().isEmpty()){
+        if (team.getCoach() == null || team.getCoach().isEmpty()) {
             throw new ValidationException("no coach");
         }
-        if(team.getPlayers() == null || team.getPlayers().isEmpty()){
+        if (team.getPlayers() == null || team.getPlayers().isEmpty()) {
             throw new ValidationException("no players");
         }
+        if (team.getStatus() == null) {
+            throw new ValidationException("no status");
+        }
     }
-    
-    private Team resultSetToTeam(ResultSet rs) throws SQLException{
+
+    private Team resultSetToTeam(ResultSet rs) throws SQLException {
         Team team = new Team();
         team.setId(rs.getLong("id"));
         team.setName(rs.getString("name"));
         team.setCoach(rs.getString("coach"));
+        switch (rs.getString("status")) {
+            case "REFEREE":
+                team.setStatus(TeamStatus.REFEREE);
+                break;
+            case "REFEREE_REQUIRED":
+                team.setStatus(TeamStatus.REFEREE_REQUIRED);
+                break;
+            case "NOVICE":
+                team.setStatus(TeamStatus.NOVICE);
+                break;
+            case "INDEPENDENT":
+                team.setStatus(TeamStatus.INDEPENDENT);
+                break;
+        }
         return team;
     }
-    
-    private List<Team> resultSetToTeamList(ResultSet rs) throws SQLException{
+
+    private List<Team> resultSetToTeamList(ResultSet rs) throws SQLException {
         List<Team> result = new ArrayList<>();
         while (rs.next()) {
             Team team = resultSetToTeam(rs);
             result.add(team);
-        }        
+        }
         return result;
+    }
+
+    @Override
+    public List<Team> findAllTeamsWithStatus(TeamStatus status) {
+        checkDataSource();
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("SELECT id,name,coach,status FROM TEAMS WHERE status = ?")) {
+            st.setString(1, status.toString());
+            
+            ResultSet rs = st.executeQuery();
+
+            return resultSetToTeamList(rs);
+
+        } catch (SQLException ex) {
+            String msg = "error when selecting all teams with status " + status.toString();
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
     }
 }

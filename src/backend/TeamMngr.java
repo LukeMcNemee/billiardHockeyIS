@@ -23,4 +23,6 @@ public interface TeamMngr {
     public Team findTeamByID(Long id);
     
     public List<Team> findAllTeams();
+    
+    public List<Team> findAllTeamsWithStatus(TeamStatus status);
 }
