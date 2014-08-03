@@ -14,11 +14,11 @@ import java.util.List;
  */
 public interface MatchMngr {
     
-    public Match createMatch(Match match);
+    public void createMatch(Match match);
     
-    public Match updateMatch(Match match);
+    public void updateMatch(Match match);
     
-    public Match deleteMatch(Match match);
+    public void deleteMatch(Match match);
     
     public Match findMatchById(Long id);
     

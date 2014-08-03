@@ -152,5 +152,37 @@ public class Match {
     public String toString() {
         return "Match{" + "id=" + id + ", homeTeam=" + homeTeam + ", awayTeam=" + awayTeam + ", datePlayed=" + datePlayed + ", result=" + result + '}';
     }
+
+    public Score getOwnGoals() {
+        return ownGoals;
+    }
+
+    public void setOwnGoals(Score ownGoals) {
+        this.ownGoals = ownGoals;
+    }
+
+    public Score getTechnicalGoals() {
+        return technicalGoals;
+    }
+
+    public void setTechnicalGoals(Score technicalGoals) {
+        this.technicalGoals = technicalGoals;
+    }
+
+    public Score getAdvantageGoals() {
+        return advantageGoals;
+    }
+
+    public void setAdvantageGoals(Score advantageGoals) {
+        this.advantageGoals = advantageGoals;
+    }
+
+    public Score getContumationGoals() {
+        return contumationGoals;
+    }
+
+    public void setContumationGoals(Score contumationGoals) {
+        this.contumationGoals = contumationGoals;
+    }
     
 }
