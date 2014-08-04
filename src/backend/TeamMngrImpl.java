@@ -27,6 +27,11 @@ public class TeamMngrImpl implements TeamMngr {
     public static final Logger logger = Logger.getLogger(TeamMngrImpl.class.getName());
     private DataSource dataSource;
 
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+
+    }
+    
     @Override
     public void createTeam(Team team) {
         checkDataSource();

@@ -27,6 +27,11 @@ public class PlayerMngrImpl implements PlayerMngr {
     public static final Logger logger = Logger.getLogger(PlayerMngrImpl.class.getName());
     private DataSource dataSource;
 
+    public void setDataSource(DataSource dataSource) {
+        this.dataSource = dataSource;
+
+    }
+    
     @Override
     public List<Player> getPlayersByTeam(Team team) {
         checkDataSource();
