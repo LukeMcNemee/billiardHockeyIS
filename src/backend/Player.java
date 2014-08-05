@@ -93,22 +93,7 @@ public class Player {
     public void setTeamID(Long teamID) {
         this.teamID = teamID;
     }
-
-    public int getHattricks(){
-        //TODO
-        return 0;
-    }
-    
-    public double getPenaltyRate(){
-        //TODO
-        return 0;
-    }
-    
-    public int getScoredGoals(){
-        //TODO
-        return 0;
-    }
-    
+       
     public boolean isHome() {
         return home;
     }

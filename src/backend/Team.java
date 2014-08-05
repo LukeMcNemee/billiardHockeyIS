@@ -6,7 +6,6 @@
 package backend;
 
 import java.util.Objects;
-import java.util.Set;
 
 /**
  *
@@ -17,8 +16,6 @@ public class Team {
     private Long id;
     private String name;
     private String coach;
-    private Set<Player> players;
-    private Set<Match> playedMatches;
     private TeamStatus status;
     
     
@@ -75,79 +72,10 @@ public class Team {
     public void setCoach(String coach) {
         this.coach = coach;
     }
-
-    public Set<Player> getPlayers() {
-        return players;
-    }
-
-    public void setPlayers(Set<Player> players) {
-        this.players = players;
-    }
-
-    public Set<Match> getPlayedMatches() {
-        return playedMatches;
-    }
-
-    public void setPlayedMatches(Set<Match> playedMatches) {
-        this.playedMatches = playedMatches;
-    }
-    
-    public int getNumMatchesPlayed(){
-        //TODO
-        return 0;
-    }
-    
-    public Score getPlayedMatchesScore(){
-        //TODO
-        return null;
-    }
-
-    public void addPlayer(Player player) {
-        players.add(player);
-    }
-
-    public void playMatch(Match match) {
-        playedMatches.add(match);
-    }
-
-    public double getCoefitient() {
-        //TODO
-        return 0;
-    }
-
-    public double getPenaltyCoefitient() {
-        //TODO
-        return 0;
-    }
-
-    public Score getScore() {
-        //TODO
-        return null;
-    }
-
-    public Score getOwnGoalsScore() {
-        //TODO
-        return null;
-    }
-
-    public Score getTechnicalGoalsScore() {
-        //TODO
-        return null;
-    }
-
-    public Score agetAdvantageGoalsScore() {
-        //TODO
-        return null;
-    }
-
-    public Score getContumationGoalsScore() {
-        //TODO
-        return null;
-    }
-
+     
     @Override
     public String toString() {
-        return "Team{" + "id=" + id + ", name=" + name + ", coach=" + coach + ", players=" + players + ", playedMatches=" + playedMatches + '}';
+        return "Team{" + "id=" + id + ", name=" + name + ", coach=" + coach + '}';
     }
 
 }

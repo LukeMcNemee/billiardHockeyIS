@@ -179,9 +179,7 @@ public class TeamMngrImpl implements TeamMngr {
         if (team.getCoach() == null || team.getCoach().isEmpty()) {
             throw new ValidationException("no coach");
         }
-        if (team.getPlayers() == null || team.getPlayers().isEmpty()) {
-            throw new ValidationException("no players");
-        }
+        
         if (team.getStatus() == null) {
             throw new ValidationException("no status");
         }

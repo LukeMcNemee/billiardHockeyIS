@@ -46,8 +46,8 @@ public class MatchMngrImpl implements MatchMngr {
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement st = conn.prepareStatement("INSERT INTO MATCHES (hometeamid, awayteamid, date, homeowngoals, awayowngoals"
-                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals)"
-                        + " VALUES (?,?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
+                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals, matchresult)"
+                        + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?)", Statement.RETURN_GENERATED_KEYS)) {
             st.setLong(1, match.getHomeTeam().getId());
             st.setLong(2, match.getAwayTeam().getId());
             st.setDate(3, match.getDatePlayed());
@@ -59,6 +59,7 @@ public class MatchMngrImpl implements MatchMngr {
             st.setInt(9, match.getContumationGoals().getAwayScore());
             st.setInt(10, match.getTechnicalGoals().getHomeScore());
             st.setInt(11, match.getTechnicalGoals().getAwayScore());
+            st.setString(12, match.getResult().toString());
 
             int addedRows = st.executeUpdate();
 
@@ -105,7 +106,7 @@ public class MatchMngrImpl implements MatchMngr {
 
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement st = conn.prepareStatement("UPDATE MATCHES SET hometeamid = ?, awayteamid = ?, date = ?, homeowngoals = ?, awayowngoals = ?"
-                        + ", homeadvantagegoals = ?, awayadvantagegoals = ?, homecontumationgoals = ?, awaycontumationgoals = ?, hometechnicalgoals = ?, awaytechnicalgoals = ?"
+                        + ", homeadvantagegoals = ?, awayadvantagegoals = ?, homecontumationgoals = ?, awaycontumationgoals = ?, hometechnicalgoals = ?, awaytechnicalgoals = ?, matchresult = ?"
                         + " WHERE id = ?")) {
             st.setLong(1, match.getHomeTeam().getId());
             st.setLong(2, match.getAwayTeam().getId());
@@ -118,7 +119,8 @@ public class MatchMngrImpl implements MatchMngr {
             st.setInt(9, match.getContumationGoals().getAwayScore());
             st.setInt(10, match.getTechnicalGoals().getHomeScore());
             st.setInt(11, match.getTechnicalGoals().getAwayScore());
-            st.setLong(12, match.getId());
+            st.setString(12, match.getResult().toString());
+            st.setLong(13, match.getId());
 
             int addedRows = st.executeUpdate();
 
@@ -204,7 +206,7 @@ public class MatchMngrImpl implements MatchMngr {
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement st = conn.prepareStatement("SELECT id, hometeamid, awayteamid, date, homeowngoals, awayowngoals"
-                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals"
+                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals, matchresult"
                         + " FROM MATCHES WHERE id = ?")) {
             st.setLong(1, id);
 
@@ -237,7 +239,7 @@ public class MatchMngrImpl implements MatchMngr {
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement st = conn.prepareStatement("SELECT id, hometeamid, awayteamid, date, homeowngoals, awayowngoals"
-                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals"
+                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals, matchresult"
                         + " FROM MATCHES WHERE hometeamid = ? OR awayteamid = ?")) {
             st.setLong(1, team.getId());
             st.setLong(2, team.getId());
@@ -261,7 +263,7 @@ public class MatchMngrImpl implements MatchMngr {
         }
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement st = conn.prepareStatement("SELECT id, hometeamid, awayteamid, date, homeowngoals, awayowngoals"
-                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals"
+                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals, matchresult"
                         + " FROM MATCHES WHERE hometeamid = ? AND awayteamid = ?")) {
             st.setLong(1, team1.getId());
             st.setLong(2, team2.getId());
@@ -297,7 +299,23 @@ public class MatchMngrImpl implements MatchMngr {
         match.setAdvantageGoals(new Score(rs.getInt("homecontumationgoals"), rs.getInt("awaycontumationgoals")));
         match.setTechnicalGoals(new Score(rs.getInt("hometechnicalgoals"), rs.getInt("awaytechnicalgoals")));
         match.setGoalsScored(getGoalsForMatch(match.getId()));
-
+        switch (rs.getString("matchresult")) {
+            case "REGULAR_TIME":
+                match.setResult(MatchResult.REGULAR_TIME);
+                break;
+            case "OVER_TIME":
+                match.setResult(MatchResult.OVER_TIME);
+                break;
+            case "CONTUMATED":
+                match.setResult(MatchResult.CONTUMATED);
+                break;
+            case "PENALTIES":
+                match.setResult(MatchResult.PENALTIES);
+                break;
+            case "DRAW":
+                match.setResult(MatchResult.DRAW);
+                break;
+        }
         return match;
     }
 
@@ -332,18 +350,20 @@ public class MatchMngrImpl implements MatchMngr {
     }
 
     private void validate(Match match) {
-        if(match == null){
+        if (match == null) {
             throw new ValidationException("match is null");
         }
-        if(match.getHomeTeam() == null || match.getAwayTeam() == null){
+        if (match.getHomeTeam() == null || match.getAwayTeam() == null) {
             throw new ValidationException("match team is null");
         }
-        if(match.getResult() == null ){
+        if (match.getResult() == null) {
             throw new ValidationException("match result null");
         }
-        if(match.getDatePlayed() == null){
+        if (match.getDatePlayed() == null) {
             throw new ValidationException("match date null");
         }
-        
+        if (match.getResult() == null) {
+            throw new ValidationException("match result null");
+        }
     }
 }
