@@ -6,11 +6,14 @@
 package backend;
 
 import common.ServiceFailureException;
+import common.ValidationException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -25,10 +28,12 @@ public class MatchMngrImpl implements MatchMngr {
 
     private DataSource dataSource;
     private PlayerMngrImpl playerMngr;
+    private TeamMngrImpl teamMngr;
 
     public void setDataSource(DataSource dataSource) {
         this.dataSource = dataSource;
         playerMngr.setDataSource(dataSource);
+        teamMngr.setDataSource(dataSource);
     }
 
     @Override
@@ -193,32 +198,131 @@ public class MatchMngrImpl implements MatchMngr {
 
     @Override
     public Match findMatchById(Long id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        checkDataSource();
+        if (id == null) {
+            throw new IllegalArgumentException("id is null");
+        }
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("SELECT id, hometeamid, awayteamid, date, homeowngoals, awayowngoals"
+                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals"
+                        + " FROM MATCHES WHERE id = ?")) {
+            st.setLong(1, id);
+
+            ResultSet rs = st.executeQuery();
+
+            if (rs.next()) {
+                Match match = resultSetToMatch(rs);
+
+                if (rs.next()) {
+                    throw new ServiceFailureException("Internal error: More entities with the same id found "
+                            + "(source id: " + id + ", found " + match + " and " + resultSetToMatch(rs));
+                }
+                return match;
+            } else {
+                return null;
+            }
+
+        } catch (SQLException ex) {
+            String msg = "error when selecting match with id" + id;
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
     }
 
     @Override
     public List<Match> findMatchesByTeam(Team team) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        checkDataSource();
+        if (team == null) {
+            throw new IllegalArgumentException("team is null");
+        }
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("SELECT id, hometeamid, awayteamid, date, homeowngoals, awayowngoals"
+                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals"
+                        + " FROM MATCHES WHERE hometeamid = ? OR awayteamid = ?")) {
+            st.setLong(1, team.getId());
+            st.setLong(2, team.getId());
+
+            ResultSet rs = st.executeQuery();
+
+            return resultSetToMatchList(rs);
+
+        } catch (SQLException ex) {
+            String msg = "error when selecting matches with team" + team;
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
     }
 
     @Override
     public List<Match> findMatchesByTeams(Team team1, Team team2) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-    }
+        checkDataSource();
+        if (team1 == null || team2 == null) {
+            throw new IllegalArgumentException("team is null");
+        }
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("SELECT id, hometeamid, awayteamid, date, homeowngoals, awayowngoals"
+                        + ", homeadvantagegoals, awayadvantagegoals, homecontumationgoals, awaycontumationgoals, hometechnicalgoals, awaytechnicalgoals"
+                        + " FROM MATCHES WHERE hometeamid = ? AND awayteamid = ?")) {
+            st.setLong(1, team1.getId());
+            st.setLong(2, team2.getId());
 
-    private Map<Player, Integer> getGoalsScoredInMatch(Long MatchId) {
-        //TODO
-        return null;
+            ResultSet rs = st.executeQuery();
+
+            return resultSetToMatchList(rs);
+
+        } catch (SQLException ex) {
+            String msg = "error when selecting matches with teams" + team1 + " " + team2;
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
     }
 
     private List<Match> resultSetToMatchList(ResultSet rs) throws SQLException {
-        //TODO
-        return null;
+        List<Match> matches = new ArrayList<>();
+        while (rs.next()) {
+            Match match = resultSetToMatch(rs);
+            matches.add(match);
+        }
+        return matches;
     }
 
     private Match resultSetToMatch(ResultSet rs) throws SQLException {
-        //TODO
-        return null;
+        Match match = new Match();
+        match.setId(rs.getLong("id"));
+        match.setHomeTeam(teamMngr.findTeamByID(rs.getLong("hometeamid")));
+        match.setAwayTeam(teamMngr.findTeamByID(rs.getLong("awayteamid")));
+        match.setDatePlayed(rs.getDate("date"));
+        match.setOwnGoals(new Score(rs.getInt("homeowngoals"), rs.getInt("awayowngoals")));
+        match.setAdvantageGoals(new Score(rs.getInt("homeadvantagegoals"), rs.getInt("awayadvantagegoals")));
+        match.setAdvantageGoals(new Score(rs.getInt("homecontumationgoals"), rs.getInt("awaycontumationgoals")));
+        match.setTechnicalGoals(new Score(rs.getInt("hometechnicalgoals"), rs.getInt("awaytechnicalgoals")));
+        match.setGoalsScored(getGoalsForMatch(match.getId()));
+
+        return match;
+    }
+
+    private Map<Player, Integer> getGoalsForMatch(Long matchId) throws SQLException {
+        Map<Player, Integer> goals = new HashMap<>();
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement st = conn.prepareStatement("SELECT playerid, amount FROM GOALS WHERE matchid = ?")) {
+
+            st.setLong(1, matchId);
+
+            ResultSet rs = st.executeQuery();
+
+            while (rs.next()) {
+                Player player = playerMngr.getPlayerById(rs.getLong("playerid"));
+                Integer amount = rs.getInt("amount");
+                goals.put(player, amount);
+            }
+
+        } catch (SQLException ex) {
+            String msg = "error when selecting goals for match with id" + matchId;
+            Logger.getLogger(TeamMngrImpl.class.getName()).log(Level.SEVERE, msg, ex);
+            throw new ServiceFailureException(msg);
+        }
+
+        return goals;
     }
 
     private void checkDataSource() {
@@ -228,6 +332,18 @@ public class MatchMngrImpl implements MatchMngr {
     }
 
     private void validate(Match match) {
-        //TODO
+        if(match == null){
+            throw new ValidationException("match is null");
+        }
+        if(match.getHomeTeam() == null || match.getAwayTeam() == null){
+            throw new ValidationException("match team is null");
+        }
+        if(match.getResult() == null ){
+            throw new ValidationException("match result null");
+        }
+        if(match.getDatePlayed() == null){
+            throw new ValidationException("match date null");
+        }
+        
     }
 }
