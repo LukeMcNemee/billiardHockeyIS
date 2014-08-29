@@ -6,10 +6,16 @@
 
 package backend;
 
+import java.util.Set;
+
 /**
  *
  * @author LukeMcNemee
  */
 public class PlayDay {
+    private Set<Match> playedMatches;
+    private Set<Team> presentTeams;
+    private Set<Team> suspendedTeams;
+    
     
 }
